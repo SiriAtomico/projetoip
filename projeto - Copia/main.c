@@ -4,8 +4,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define WINDOW_WIDTH 960
-#define WINDOW_HEIGHT 528
+#define WINDOW_WIDTH 1008
+#define WINDOW_HEIGHT 608
 
 typedef struct {
     Vector2 position;
@@ -57,13 +57,20 @@ int main() {
     int flagParado = 0;
     int contadorOndas = 1;
     int flagMorte = 0;
+    int flagDefesa = 0;
 
     InitAudioDevice();
 
-    Rectangle paredes[4] = {{0, 0, 215, WINDOW_HEIGHT},
-    {0, 0, WINDOW_WIDTH, 140},
-    {0, 425, WINDOW_WIDTH, WINDOW_HEIGHT - 425},
-    {575, 0, WINDOW_WIDTH - 575, WINDOW_HEIGHT}};
+    Rectangle paredes[4] = {
+    //esquerda
+    {0, 0, 20, WINDOW_HEIGHT},
+    //direita
+    {WINDOW_WIDTH - 90, 0, 115, WINDOW_HEIGHT},
+    //cima
+    {0, 0, WINDOW_WIDTH, 65},
+    //baixo
+    {0, WINDOW_HEIGHT - 135, WINDOW_WIDTH, 100}
+    };
 
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "teste");
     SetTargetFPS(60);
@@ -153,17 +160,17 @@ int main() {
             // Codigo
 
             // Jogador
-            if(IsKeyDown(KEY_S) && !CheckCollisionRecs(paredes[2], hitbox)) {
+            if(IsKeyDown(KEY_S) && !CheckCollisionRecs(paredes[3], hitbox)) {
                 player.position.y += player.speed;
                 playerattack.y += player.speed;
                 flagParado = 0;
             }
-            if(IsKeyDown(KEY_W) && !CheckCollisionRecs(paredes[1], hitbox)) {
+            if(IsKeyDown(KEY_W) && !CheckCollisionRecs(paredes[2], hitbox)) {
                 player.position.y -= player.speed;
                 playerattack.y -= player.speed;
                 flagParado = 0;
             }
-            if(IsKeyDown(KEY_D) && !CheckCollisionRecs(paredes[3], hitbox)) {
+            if(IsKeyDown(KEY_D) && !CheckCollisionRecs(paredes[1], hitbox)) {
                 player.position.x += player.speed;
                 playerattack.x += player.speed;
                 flagMovimento = 0;
@@ -174,6 +181,12 @@ int main() {
                 playerattack.x -= player.speed;
                 flagMovimento = 1;
                 flagParado = 0;
+            }
+            if(IsKeyDown(KEY_SPACE)){
+                flagDefesa = 1;
+            }
+            else{
+                flagDefesa = 0;
             }
             if(IsKeyUp(KEY_A) && IsKeyUp(KEY_D) && IsKeyUp(KEY_W) && IsKeyUp(KEY_S) && flagMovimento == 0){
                 flagParado = 1;
@@ -279,7 +292,7 @@ int main() {
                     }
                 }
 
-                if(CheckCollisionCircles((Vector2){player.position.x + 30, player.position.y + 25} , player.size, enemies[i].position, enemies[i].size) && atkdelayInimigo <= 0) {\
+                if(CheckCollisionCircles((Vector2){player.position.x + 30, player.position.y + 25} , player.size, enemies[i].position, enemies[i].size) && atkdelayInimigo <= 0 && flagDefesa == 0) {\
                     atkdelayInimigo = 40;
                     player.health--;
                     framesVida++;
@@ -300,8 +313,8 @@ int main() {
             // Desenho 
             BeginDrawing(); 
                 ClearBackground(GRAY);
-                DrawTextureRec(vida, (Rectangle){60, (vida.height/6)*framesVida, vida.width, vida.height/6}, (Vector2){0, 0}, WHITE);
                 DrawTexture(mapa, 0, 0, WHITE);
+                DrawTextureRec(vida, (Rectangle){60, (vida.height/6)*framesVida, vida.width, vida.height/6}, (Vector2){0, 0}, WHITE);
                 // DrawText(TextFormat("%d", atktime), 0, 0, 30, BLACK);
                 if(atktime > 0) {
                     if(flagMovimento == 0)
@@ -311,17 +324,23 @@ int main() {
                     // DrawRectangle(playerattack.x, playerattack.y, playerattack.width, playerattack.height, GREEN);
                 }
                 // DrawCircle(player.position.x, player.position.y, player.size, BLUE);
-                if(flagMovimento == 0 && atktime <= 0 && flagParado == 0){
+                if(flagMovimento == 0 && atktime <= 0 && flagParado == 0 && flagDefesa == 0){
                 DrawTextureRec(personagem, (Rectangle){(personagem.width/4)*framePlayer, personagem.height/3, personagem.width/4,personagem.height/3},(Vector2){player.position.x, player.position.y}, WHITE);
                 }
-                else if (flagMovimento == 1 && atktime <= 0 && flagParado == 0){
+                else if (flagMovimento == 1 && atktime <= 0 && flagParado == 0 && flagDefesa == 0){
                 DrawTextureRec(personagemInvertido, (Rectangle){(personagemInvertido.width/4)*framePlayer, personagemInvertido.height/3, personagemInvertido.width/4,personagemInvertido.height/3},(Vector2){player.position.x, player.position.y}, WHITE);
                 }
-                else if (flagMovimento == 1 && atktime <= 0 && flagParado == 2){
+                else if (flagMovimento == 1 && atktime <= 0 && flagParado == 2 && flagDefesa == 0){
                 DrawTextureRec(personagemInvertido, (Rectangle){(personagemInvertido.width/4)*framePlayer, 0, personagemInvertido.width/4,personagemInvertido.height/3},(Vector2){player.position.x, player.position.y}, WHITE);
                 }
-                else if (flagMovimento == 0 && atktime <= 0 && flagParado == 1){
+                else if (flagMovimento == 0 && atktime <= 0 && flagParado == 1 && flagDefesa == 0){
                 DrawTextureRec(personagem, (Rectangle){(personagem.width/4)*framePlayer, 0, personagem.width/4,personagem.height/3},(Vector2){player.position.x, player.position.y}, WHITE);
+                }
+                else if (atktime <= 0 && flagDefesa == 1 && flagMovimento == 0){
+                    DrawTextureRec(ataque, (Rectangle){(ataque.width/4)*3, (ataque.height/7) * 6, ataque.width/4, ataque.height/7},(Vector2){player.position.x, player.position.y}, WHITE);
+                }
+                else if (atktime <= 0 && flagDefesa == 1 && flagMovimento == 1){
+                    DrawTextureRec(ataqueInvertido, (Rectangle){0, (ataque.height/7) * 6, ataqueInvertido.width/4, ataqueInvertido.height/7},(Vector2){player.position.x, player.position.y}, WHITE);
                 }
                 for(int i = 0; i < numinimigos; i++) {
                     DrawTextureRec(morcego, (Rectangle){(morcego.width/3)*frameMorcego, 0, morcego.width/3,morcego.height},(Vector2){enemies[i].position.x, enemies[i].position.y}, WHITE);
@@ -396,6 +415,9 @@ int main() {
     UnloadTexture(personagemParado);
     UnloadTexture(morcego);
     UnloadTexture(mapa);
+    UnloadTexture(ataque);
+    UnloadTexture(ataqueInvertido);
+    UnloadTexture(mortePersonagem);
     free(enemies);
     UnloadSound(playersoundAtaque); 
     UnloadSound(morcegoAtingido);
